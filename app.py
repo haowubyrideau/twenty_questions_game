@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import logging
+import base64
 from strands import Agent
 from strands.models.anthropic import AnthropicModel
 from session_monitor import get_monitor
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 api_key = os.environ.get("AKEY") or os.environ.get("ANTHROPIC_API_KEY")
 
 # Model ID configuration
-MODEL_ID = "claude-4-5-haiku-20251015" 
+MODEL_ID = "claude-haiku-4-5-20251001" 
 
 # --- Game Logic ---
 
@@ -79,18 +80,33 @@ def generate_response(history):
     
     transcript += "AI (You): "
     
-    # Estimate input tokens (rough char count / 4)
-    input_usage = len(transcript) / 4
-
     try:
         response_obj = agent(transcript)
         response_text = str(response_obj)
         
-        # Estimate output tokens
-        output_usage = len(response_text) / 4
+        # Token Counting Logic
+        input_count = 0
+        output_count = 0
         
+        # 1. Try to get exact usage from response object (if supported by library)
+        if hasattr(response_obj, 'usage'):
+            # usage might be an object or dict
+            usage = response_obj.usage
+            if isinstance(usage, dict):
+                input_count = usage.get('input_tokens', 0) or usage.get('prompt_tokens', 0)
+                output_count = usage.get('output_tokens', 0) or usage.get('completion_tokens', 0)
+            else:
+                input_count = getattr(usage, 'input_tokens', getattr(usage, 'prompt_tokens', 0))
+                output_count = getattr(usage, 'output_tokens', getattr(usage, 'completion_tokens', 0))
+        
+        # 2. Fallback to heuristic (1 token ~= 3.5 chars for English)
+        if input_count == 0:
+            input_count = int(len(transcript) / 3.5)
+        if output_count == 0:
+            output_count = int(len(response_text) / 3.5)
+            
         # Update monitor
-        monitor.update_tokens(int(input_usage + output_usage))
+        monitor.update_tokens(input_count + output_count)
         
         return response_text
     except Exception as e:
@@ -99,8 +115,29 @@ def generate_response(history):
 
 # --- UI ---
 
+def add_bg_from_local(image_file):
+    with open(image_file, "r") as f:
+        html_data = f.read()
+    
+    b64_str = base64.b64encode(html_data.encode()).decode()
+    
+    st.markdown(
+        f"""
+        <iframe src="data:text/html;base64,{b64_str}" 
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; border: none; pointer-events: none;">
+        </iframe>
+        """,
+        unsafe_allow_html=True
+    )
+
 def main():
     st.set_page_config(page_title="20 Questions", page_icon="🧩")
+    
+    # Add the background
+    try:
+        add_bg_from_local('background.html')
+    except Exception as e:
+        logger.warning(f"Failed to load background: {e}")
     
     # Initialize session monitor early
     get_monitor()
@@ -112,10 +149,15 @@ def main():
         
         html, body, [class*="css"]  {
             font-family: 'Comic Neue', cursive;
+            background-color: transparent;
+        }
+        .stApp {
+            background: transparent;
         }
         .title {
             color: #FF6B6B;
             text-align: center;
+            text-shadow: 2px 2px 4px #FFFFFF;
         }
         .big-text {
             font-size: 24px;
@@ -123,12 +165,16 @@ def main():
             font-weight: bold;
             text-align: center;
             margin: 20px;
+            text-shadow: 1px 1px 2px #FFFFFF;
         }
         .stButton>button {
             width: 100%;
             border-radius: 20px;
             height: 50px;
             font-size: 20px;
+            background-color: transparent;
+            border: 2px solid #4ECDC4;
+            color: #4ECDC4;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -198,7 +244,7 @@ def main():
         st.markdown("<div class='big-text'>I give up! What was it? 🤔</div>", unsafe_allow_html=True)
         item_name = st.text_input("The item was:", key="reveal_item")
         
-        if st.button("Tell AI") and item_name:
+        if st.button("Tell me please") and item_name:
             with st.spinner("Reading about it..."):
                 # Custom prompt for the "Lost" reaction
                 prompt = f"The user has revealed the item was: '{item_name}'. You failed to guess it. React with surprise (e.g., 'No way! really?') and provide a short story or fun fact about '{item_name}'."

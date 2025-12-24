@@ -24,7 +24,16 @@
 - Python 3.11+ (or Docker)
 - Anthropic API key
 
-### Method 1: Local Installation (Python/uv)
+### Method 1: Using uv (Recommended) 🚀
+
+If you have `uv` installed, you don't need to manually create environments or install dependencies. `uv` handles it all in one command.
+
+```bash
+# Run immediately (uv will set up the environment and install packages)
+AKEY="your-anthropic-api-key" uv run streamlit run app.py
+```
+
+### Method 2: Standard Python (pip) 🐍
 
 1. **Clone the repository:**
    ```bash
@@ -32,23 +41,15 @@
    cd twenty_questions_game
    ```
 
-2. **Install dependencies (using uv or pip):**
+2. **Install dependencies:**
    ```bash
-   # Using uv (Recommended)
-   uv pip install -r requirements.txt
-   
-   # OR using standard pip
    pip install -r requirements.txt
    ```
 
 3. **Run the game:**
    ```bash
-   # Set your API Key and run
    export AKEY="your-anthropic-api-key"
    streamlit run app.py
-   
-   # Or with uv directly:
-   AKEY="sk-..." uv run streamlit run app.py
    ```
 
 ### Method 2: Docker / VPS
