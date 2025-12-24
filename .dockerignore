@@ -1,0 +1,10 @@
+.git
+.venv
+.gemini
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+inspect_strands.py
+tmp/

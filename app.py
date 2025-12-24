@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 api_key = os.environ.get("AKEY") or os.environ.get("ANTHROPIC_API_KEY")
 
 # Model ID configuration
-MODEL_ID = "claude-3-5-haiku-20241022" 
+MODEL_ID = "claude-4-5-haiku-20251015" 
 
 # --- Game Logic ---
 
@@ -171,7 +171,9 @@ def main():
             st.rerun()
 
     elif st.session_state.game_state == 'playing':
-        st.progress(st.session_state.question_count / 20)
+        # Clamp progress to 1.0 to avoid error if count goes over 20
+        progress_val = min(st.session_state.question_count / 20, 1.0)
+        st.progress(progress_val)
         st.write(f"Question {st.session_state.question_count} / 20")
 
         ai_msg = st.session_state.last_ai_msg
@@ -188,9 +190,31 @@ def main():
                 process_answer("No")
 
         if st.session_state.question_count >= 20:
-             st.warning("That was my last guess!")
-             if st.button("Game Over - Restart"):
-                 reset_game()
+             st.warning("I couldn't guess it within 20 questions! 😲")
+             st.session_state.game_state = 'lost_guessing'
+             st.rerun()
+
+    elif st.session_state.game_state == 'lost_guessing':
+        st.markdown("<div class='big-text'>I give up! What was it? 🤔</div>", unsafe_allow_html=True)
+        item_name = st.text_input("The item was:", key="reveal_item")
+        
+        if st.button("Tell AI") and item_name:
+            with st.spinner("Reading about it..."):
+                # Custom prompt for the "Lost" reaction
+                prompt = f"The user has revealed the item was: '{item_name}'. You failed to guess it. React with surprise (e.g., 'No way! really?') and provide a short story or fun fact about '{item_name}'."
+                
+                # Append to history so the AI has context
+                st.session_state.history.append(("System", prompt))
+                
+                response = generate_response(st.session_state.history)
+                st.session_state.last_ai_msg = response
+                st.session_state.game_state = 'lost_finished'
+                st.rerun()
+
+    elif st.session_state.game_state == 'lost_finished':
+        st.markdown(f"<div class='big-text'>{st.session_state.last_ai_msg}</div>", unsafe_allow_html=True)
+        if st.button("Play Again 🔄"):
+            reset_game()
 
     elif st.session_state.game_state == 'finished':
         # Display the winning message one last time (stored in last_ai_msg)

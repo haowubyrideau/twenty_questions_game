@@ -1,59 +1,70 @@
 # The project requirements:
 
 ## Technical:
-You need to use streamlit library to build the UI. Use children friendly font and UI design.  you can reference to PBR Wow in the world theme
-You can use aws strands agent to develope agents https://strandsagents.com/latest/.  https://github.com/strands-agents/samples/tree/main/02-samples/09-finance-assistant-swarm-agent
-You use anthropic model , haiku 4.5
-You can use flask , gunicorn to run the server
-You can use python only
-API keys for anthropic model is accessible from environment variable. [AKEY]
+* **UI Framework:** Streamlit (Children friendly font and UI design, reference PBR Wow in the world theme).
+* **Agent Library:** `strands-agents` (specifically with Anthropic provider).
+* **AI Model:** Anthropic Claude 4.5 Haiku (`claude-4-5-haiku-20251015`).
+* **Language:** Python 3.11+.
+* **Package Manager:** `uv` (preferred) or `pip`.
+* **Deployment:** 
+    *   **Render.com** (Web Service).
+    *   **Docker** (Containerized for VPS hosting).
+* **Environment Variables:** `AKEY` (Anthropic API Key).
 
-## development environment
-* you use uv
-* you need to use aws strands api to build agent
-* you use python
+## Development Environment
+* You use `uv` for dependency management.
+* You need to use the `strands-agents` API to build the agent.
 
-## User stories
+## User Stories
 You are playing with children in grade 5-6.  
-You play a game called twenty questions games.  This game is different to the classic twenty question games.
+You play a game called "Twenty Questions". This game is different from the classic version.
 
-You must play the game in this rule:
-1. ask player to have an object in mind.  don't share with any one. 
-2. you need to try to guess the item. 
-3. the player can only response 'yes' or 'no'. 
-4. your max attempts are 20.  
+**Game Rules:**
+1. Ask the player to have an object in mind and keep it secret.
+2. The AI (You) needs to try to guess the item.
+3. The player can only response 'Yes' or 'No'.
+4. Maximum attempts: 20.
 
+## Operation & Logging
+* **Hosting:** Render.com or Docker on VPS.
+* **Source Code:** GitHub.
+* **Logging:** In server-side logs, upon session disconnect, show the total estimated token consumption for that session.
 
-## Operation
-* this project needs to be hosted on render.com
-* source code must be stored in github
+## User Experience
 
+### 1. Launch / Init
+* Ask for the player's name.
+* Show an intro note: "We are going to play a guessing game. Ask the player to think about one thing and keep that in mind. I will guess it out. When you are ready click 'start'."
+* Show a 'Start' button.
 
-## user experience
-### when launch the webpage 
-* you will ask for player to input the name. 
-* you show a note on the screen:  we are going to play a guessing game.  ask the player to think about one thing and keep that in mind. I will guess it out.  when you are ready click 'start'.
-* then prompt a 'start' button to show they are ready to start 
+### 2. Gameplay (Loop)
+* AI makes a guess or asks a question in a cute font.
+* Player clicks "YES" or "NO" buttons.
+* AI follows the clue and asks the next question, using previous context.
+* Repeat until the item is guessed or 20 questions are used.
 
-### after click 'start' button
-* you make a guess, and print it on the screen in a cute font.
-* you ask the player if they are correct. 
-* player can click  "yes" or "no" button
-* then you follow the clue and start guess. 
-* You repeat to ask question above until you guess out the item. util 20 qquestions. 
-* you ask question with previous answer as context.
+*Example Flow:*
+> AI: Is it something you can see? -> Player: Yes
+> AI: Is it something on the earth? -> Player: No
+> AI: Is it something far away? -> Player: Yes
+> AI: Is it the moon? -> Player: No
+> AI: Is it the Neptune? -> Player: Yes (Win)
 
-for example: 
-is it something you can see?  yes
-is it something on the earth?  no
-is it something far away ? yes
-is it the moon? no
-is it the Naptune? yes. <at ths point you win the games>
+### 3. Game Won
+* **Celebration:** Give positive feedback/balloons.
+* **Educational Content:** Create a summary and give a short story or history/fun fact about the item (e.g., "Did you know that crayon was invented by...").
+* **Play Again:** Provide a button to restart the game. The question counter must reset. **Do not** ask for the name again; jump straight to the "Ready" state.
 
-### when you win the game
-* You create a summary and give positive feedback. if you could give a short story or history about the item . e.g. if the player item is a cryaon.  did you know that crayon was invented by ...
-You need to restart the question counter and start asking question again. 
+### 4. Game Lost (20 Questions Reached)
+* **Prompt:** The AI should ask "I give up! What was the item?"
+* **Action:** User inputs the item name.
+* **Reaction:** AI acts surprised ("No way! really?") and provides a short story or history/fun fact about the revealed item.
+* **Play Again:** Provide a button to restart.
 
-[rule]
-You must use strandsagent library.  example script: https://github.com/strands-agents/samples/blob/main/01-tutorials/01-fundamentals/01-first-agent/01-first-agent.ipynb
-anthorpic model : https://strandsagents.com/0.1.x/documentation/docs/user-guide/concepts/model-providers/anthropic/
+### 5. Disclaimer
+* At the bottom of the app, show a disclaimer:
+  > "We don't collect any data and store any answers. This is for education and recreational purposes. Any question please email again.jigsaws9i@icloud.com"
+
+## Resources
+* Strands Agent Library: https://github.com/strands-agents/samples/blob/main/01-tutorials/01-fundamentals/01-first-agent/01-first-agent.ipynb
+* Anthropic Provider: https://strandsagents.com/0.1.x/documentation/docs/user-guide/concepts/model-providers/anthropic/
