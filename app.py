@@ -3,7 +3,7 @@ import os
 import logging
 import base64
 from strands import Agent
-from strands.models.anthropic import AnthropicModel
+from strands.models.openai import OpenAIModel
 from session_monitor import get_monitor
 
 # Configure logging
@@ -11,32 +11,33 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
-# The PRD mentions AKEY. We'll ensure it's available for the AnthropicModel.
-api_key = os.environ.get("AKEY") or os.environ.get("ANTHROPIC_API_KEY")
+# Updated to use DeepSeek API with OpenAI-compatible endpoint
+api_key = os.environ.get("AKEY")
 
-# Model ID configuration
-MODEL_ID = "claude-haiku-4-5-20251001" 
+# Model ID configuration for DeepSeek
+MODEL_ID = "deepseek-chat"
 
 # --- Game Logic ---
 
 def get_agent():
     """
-    Initializes the Strands Agent with Anthropic Model.
+    Initializes the Strands Agent with OpenAI-compatible DeepSeek Model.
     """
     try:
         if not api_key:
-            st.error("Missing API Key (AKEY or ANTHROPIC_API_KEY).")
+            st.error("Missing API Key (AKEY).")
             return None
 
-        # Configure the Anthropic Model
-        model = AnthropicModel(
+        # Configure the OpenAI-compatible DeepSeek Model
+        model = OpenAIModel(
             client_args={
                 "api_key": api_key,
+                "base_url": "https://api.deepseek.com",
             },
             model_id=MODEL_ID,
-            max_tokens=1024,
             params={
-                "temperature": 0.7, 
+                "max_tokens": 1024,
+                "temperature": 0.7,
             }
         )
 
