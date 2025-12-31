@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import logging
 import base64
+import yaml
 from strands import Agent
 from strands.models.openai import OpenAIModel
 from session_monitor import get_monitor
@@ -131,6 +132,15 @@ def add_bg_from_local(image_file):
         unsafe_allow_html=True
     )
 
+def load_config():
+    """Load configuration from config.yaml file"""
+    try:
+        with open('config.yaml', 'r') as file:
+            return yaml.safe_load(file)
+    except Exception as e:
+        logger.error(f"Failed to load config: {e}")
+        return {"invitation_codes": ["WONDER2028"]}  # fallback
+
 def main():
     st.set_page_config(page_title="20 Questions", page_icon="🧩")
     
@@ -142,6 +152,10 @@ def main():
     
     # Initialize session monitor early
     get_monitor()
+
+    # Load configuration
+    config = load_config()
+    invitation_codes = config.get('invitation_codes', ['WONDER2028'])
 
     # Custom CSS for children-friendly font and UI
     st.markdown("""
@@ -183,7 +197,7 @@ def main():
     st.markdown("<h1 class='title'>✨ 20 Questions Game ✨</h1>", unsafe_allow_html=True)
 
     if 'game_state' not in st.session_state:
-        st.session_state.game_state = 'init'
+        st.session_state.game_state = 'welcome'
     if 'history' not in st.session_state:
         st.session_state.history = []
     if 'question_count' not in st.session_state:
@@ -191,7 +205,23 @@ def main():
     if 'last_ai_msg' not in st.session_state:
         st.session_state.last_ai_msg = ""
 
-    if st.session_state.game_state == 'init':
+    if st.session_state.game_state == 'welcome':
+        st.markdown("<div class='big-text'>Welcome to the 20 Questions Game! 🎉</div>", unsafe_allow_html=True)
+        st.write("Please enter your invitation code to play:")
+        
+        # Create a form for better UX
+        with st.form("invitation_form"):
+            user_code = st.text_input("Invitation Code", type="password", label_visibility="collapsed")
+            submit_button = st.form_submit_button("Enter Game 🚀")
+            
+            if submit_button:
+                if user_code in invitation_codes:
+                    st.session_state.game_state = 'init'
+                    st.rerun()
+                else:
+                    st.error("Invalid invitation code. Please try again.")
+    
+    elif st.session_state.game_state == 'init':
         st.write("Hello! I'm your guessing friend. What's your name?")
         name = st.text_input("Name", label_visibility="collapsed")
         if st.button("Next") and name:
