@@ -56,6 +56,8 @@ def get_agent():
             "     (e.g., 'Did you know that the crayon was invented by...'). "
             "   - END your response with the exact text: [GAME_WON]"
             "7. Do NOT number your questions. Just ask the question."
+            "The scope is only with common objects familiar to children in Grade 5-6.  You should NOT ask about people, places, or abstract concepts."
+            "You must not ask about adult, sexual or inappropriate content."
         )
 
         agent = Agent(
@@ -337,7 +339,7 @@ if __name__ == "__main__":
         """
         <div style='text-align: center; color: grey; font-size: 12px;'>
             We don't collect any data and store any answers. This is for education and recreational purposes.<br>
-            Any question please email <a href="mailto:again.jigsaws9i@icloud.com">again.jigsaws9i@icloud.com</a>
+            Would you like to see more games and support us? please email <a href="mailto:again.jigsaws9i@icloud.com">again.jigsaws9i@icloud.com</a>
         </div>
         """, 
         unsafe_allow_html=True
